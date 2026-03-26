@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RoomManager Pro — Wings A–H · 168 Rooms</title>
+<style>
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f4; --bg3: #eeece8;
+    --text: #1a1a18; --text2: #6b6b66; --text3: #a0a09a;
+    --border: rgba(0,0,0,0.1); --border2: rgba(0,0,0,0.18);
+    --radius: 8px; --radius-lg: 12px;
+    --blue: #185FA5; --blue-bg: #E6F1FB; --blue-text: #0C447C;
+    --green: #3B6D11; --green-bg: #EAF3DE; --green-text: #27500A;
+    --amber: #854F0B; --amber-bg: #FAEEDA; --amber-text: #633806;
+    --red: #A32D2D; --red-bg: #FCEBEB; --red-text: #791F1F;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c; --bg2: #272725; --bg3: #2f2f2c;
+      --text: #e8e6df; --text2: #a0a09a; --text3: #6b6b66;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
+      --blue: #4fa3e8; --blue-bg: #0c2d4a; --blue-text: #85C8F8;
+      --green: #7ec84a; --green-bg: #1a2e0a; --green-text: #a8e070;
+      --amber: #e8a030; --amber-bg: #2e1e04; --amber-text: #f0c070;
+      --red: #e05050; --red-bg: #2e0a0a; --red-text: #f08080;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 16px; }
+  .app { display: flex; width: 100%; max-width: 1200px; height: calc(100vh - 32px); min-height: 600px; border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--bg); box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+  /* SIDEBAR */
+  .sidebar { width: 196px; background: var(--bg2); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .logo { padding: 16px 14px 12px; border-bottom: 0.5px solid var(--border); }
+  .logo-title { font-size: 15px; font-weight: 600; }
+  .logo-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .nav-section { padding: 12px 14px 3px; font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: .07em; text-transform: uppercase; }
+  .nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 14px; font-size: 13px; cursor: pointer; color: var(--text2); border-left: 2px solid transparent; transition: all .13s; user-select: none; }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: var(--bg); color: var(--text); border-left-color: var(--blue); font-weight: 500; }
+  .sidebar-footer { margin-top: auto; padding: 10px 14px; border-top: 0.5px solid var(--border); font-size: 11px; color: var(--text3); }
+  /* MAIN */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { padding: 10px 20px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; background: var(--bg); }
+  .topbar-title { font-size: 16px; font-weight: 600; }
+  .topbar-actions { display: flex; gap: 7px; align-items: center; }
+  .content { flex: 1; overflow-y: auto; padding: 16px 20px; }
+  /* BUTTONS */
+  .btn { font-size: 12px; padding: 6px 13px; border-radius: var(--radius); border: 0.5px solid var(--border2); cursor: pointer; background: var(--bg); color: var(--text); transition: background .13s; font-family: inherit; }
+  .btn:hover { background: var(--bg2); }
+  .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .btn-primary:hover { opacity: .88; }
+  .btn-danger { background: var(--red); color: #fff; border-color: var(--red); }
+  .btn-sm { font-size: 11px; padding: 3px 9px; }
+  /* PAGES */
+  .page { display: none; } .page.active { display: block; }
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin-bottom: 16px; }
+  .stat-card { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; }
+  .stat-label { font-size: 11px; color: var(--text2); margin-bottom: 3px; }
+  .stat-value { font-size: 22px; font-weight: 600; }
+  .stat-sub { font-size: 11px; margin-top: 2px; }
+  .cv-blue { color: var(--blue); } .cv-green { color: var(--green); } .cv-amber { color: var(--amber); } .cv-red { color: var(--red); }
+  /* TABLE */
+  .section-title { font-size: 13px; font-weight: 600; margin-bottom: 9px; }
+  .table-wrap { border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: var(--bg2); font-weight: 500; font-size: 11px; padding: 8px 12px; text-align: left; color: var(--text2); border-bottom: 0.5px solid var(--border); }
+  td { padding: 8px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg2); }
+  /* BADGES */
+  .badge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 500; }
+  .badge-paid { background: var(--green-bg); color: var(--green-text); }
+  .badge-pending { background: var(--amber-bg); color: var(--amber-text); }
+  .badge-overdue { background: var(--red-bg); color: var(--red-text); }
+  .badge-occupied { background: var(--blue-bg); color: var(--blue-text); }
+  .badge-vacant { background: var(--green-bg); color: var(--green-text); }
+  .badge-maintenance { background: var(--amber-bg); color: var(--amber-text); }
+  /* ROOM MAP */
+  .wing-block { margin-bottom: 14px; }
+  .wing-label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .wing-tag { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 5px; font-size: 11px; font-weight: 600; color: #fff; }
+  .room-row { display: flex; flex-wrap: wrap; gap: 4px; }
+  .room-cell { width: 44px; height: 32px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; transition: transform .1s; border: 0.5px solid transparent; }
+  .room-cell:hover { transform: scale(1.12); z-index: 10; position: relative; }
+  .r-occupied { background: #B5D4F4; border-color: #378ADD; color: #0C447C; }
+  .r-vacant { background: #C0DD97; border-color: #639922; color: #27500A; }
+  .r-overdue { background: #F7C1C1; border-color: #E24B4A; color: #791F1F; }
+  .r-maintenance { background: #FAC775; border-color: #BA7517; color: #633806; }
+  .legend { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+  /* FILTER */
+  .filter-row { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+  .filter-btn { font-size: 11px; padding: 4px 11px; border-radius: 20px; border: 0.5px solid var(--border2); cursor: pointer; background: var(--bg); color: var(--text2); font-family: inherit; transition: all .13s; }
+  .filter-btn.active, .filter-btn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .search-input { font-size: 12px; padding: 6px 11px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: inherit; width: 170px; }
+  .search-input:focus { outline: none; border-color: var(--blue); }
+  /* TENANT CARDS */
+  .tenant-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .tenant-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px; cursor: pointer; transition: border-color .15s; }
+  .tenant-card:hover { border-color: var(--border2); }
+  .tc-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .avatar-lg { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 15px; flex-shrink: 0; overflow: hidden; }
+  .avatar-lg img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .tc-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .tc-room { font-size: 11px; color: var(--text2); }
+  .tc-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; }
+  .tc-row span:first-child { color: var(--text2); }
+  .tc-row span:last-child { font-weight: 500; }
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
+  .modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border2); width: 520px; max-height: 90vh; overflow-y: auto; }
+  .modal-wide { width: 640px; }
+  .modal-header { padding: 14px 18px 12px; border-bottom: 0.5px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--bg); z-index: 1; }
+  .modal-header h3 { font-size: 15px; font-weight: 600; }
+  .modal-close { cursor: pointer; font-size: 22px; color: var(--text2); background: none; border: none; font-family: inherit; line-height: 1; }
+  .modal-body { padding: 16px 18px; }
+  .modal-footer { padding: 12px 18px; border-top: 0.5px solid var(--border); display: flex; justify-content: flex-end; gap: 7px; position: sticky; bottom: 0; background: var(--bg); }
+  .form-row { margin-bottom: 11px; }
+  .form-label { font-size: 11px; color: var(--text2); margin-bottom: 3px; display: block; }
+  .form-input, .form-select { width: 100%; font-size: 13px; padding: 7px 10px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: inherit; }
+  .form-input:focus, .form-select:focus { outline: none; border-color: var(--blue); }
+  .form-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .form-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; }
+  /* PROFILE */
+  .profile-header { background: var(--bg2); border-radius: var(--radius-lg); padding: 18px; display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+  .profile-avatar { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 26px; flex-shrink: 0; overflow: hidden; border: 2px solid var(--border); cursor: pointer; }
+  .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .profile-name { font-size: 18px; font-weight: 600; margin-bottom: 3px; }
+  .profile-room { font-size: 12px; color: var(--text2); margin-bottom: 7px; }
+  .profile-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .profile-tabs { display: flex; border-bottom: 0.5px solid var(--border); margin-bottom: 14px; }
+  .profile-tab { font-size: 12px; padding: 8px 14px; cursor: pointer; color: var(--text2); border-bottom: 2px solid transparent; margin-bottom: -0.5px; transition: all .13s; user-select: none; }
+  .profile-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 500; }
+  .profile-section { display: none; } .profile-section.active { display: block; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .info-item { padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+  .info-item:nth-last-child(-n+2) { border-bottom: none; }
+  .info-item-label { font-size: 10px; color: var(--text2); margin-bottom: 2px; }
+  .info-item-val { font-size: 13px; font-weight: 500; }
+  .pay-history-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 0.5px solid var(--border); font-size: 12px; }
+  .pay-history-row:last-child { border-bottom: none; }
+  .pay-summary-mini { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+  .mini-stat { background: var(--bg2); border-radius: var(--radius); padding: 9px; text-align: center; }
+  .mini-stat-val { font-size: 18px; font-weight: 600; }
+  .mini-stat-lbl { font-size: 10px; color: var(--text2); margin-top: 2px; }
+  .detail-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 0.5px solid var(--border); font-size: 12px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { color: var(--text2); }
+  .upload-area { border: 1px dashed var(--border2); border-radius: var(--radius); padding: 18px; text-align: center; cursor: pointer; transition: background .13s; }
+  .upload-area:hover { background: var(--bg2); }
+  .doc-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 12px; }
+  .doc-item:last-child { border-bottom: none; }
+  .note-box { background: var(--bg2); border-radius: var(--radius); padding: 10px 12px; font-size: 12px; color: var(--text2); margin-top: 8px; }
+  .sub-section-title { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; margin: 14px 0 8px; }
+  .pay-summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; margin-bottom: 14px; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; overflow: hidden; }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-title">RoomManager Pro</div>
+      <div class="logo-sub">Wings A–H · 168 Rooms</div>
+    </div>
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)">⊞ Dashboard</div>
+    <div class="nav-item" onclick="showPage('rooms',this)">⬜ Room Map</div>
+    <div class="nav-section">Management</div>
+    <div class="nav-item" onclick="showPage('tenants',this)">👤 Tenants</div>
+    <div class="nav-item" onclick="showPage('payments',this)">💳 Payments</div>
+    <div class="nav-item" onclick="showPage('invoices',this)">🧾 Invoices</div>
+    <div class="nav-section">Reports</div>
+    <div class="nav-item" onclick="showPage('reports',this)">📊 Reports</div>
+    <div class="sidebar-footer">RoomManager Pro v1.0</div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-actions">
+        <input class="search-input" placeholder="Search tenant, room..." oninput="globalSearch(this.value)" id="gsearch">
+        <button class="btn btn-primary" onclick="openAddTenant()">+ Add Tenant</button>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Total Rooms</div><div class="stat-value">168</div><div class="stat-sub" style="color:var(--text2)">Wings A–H</div></div>
+          <div class="stat-card"><div class="stat-label">Occupied</div><div class="stat-value cv-blue" id="d-occ">—</div><div class="stat-sub cv-blue" id="d-occ-p">—</div></div>
+          <div class="stat-card"><div class="stat-label">Monthly Revenue</div><div class="stat-value cv-green" id="d-rev">—</div><div class="stat-sub cv-green" id="d-coll">—</div></div>
+          <div class="stat-card"><div class="stat-label">Overdue</div><div class="stat-value cv-red" id="d-ov">—</div><div class="stat-sub cv-red" id="d-ov-a">—</div></div>
+        </div>
+        <div class="section-title">Recent Payments</div>
+        <div class="table-wrap"><table><thead><tr><th>Room</th><th>Tenant</th><th>Amount</th><th>Paid On</th><th>Status</th></tr></thead><tbody id="d-pay"></tbody></table></div>
+        <div class="section-title">Overdue Rooms</div>
+        <div class="table-wrap"><table><thead><tr><th>Room</th><th>Tenant</th><th>Amount</th><th>Due</th><th>Action</th></tr></thead><tbody id="d-ov-t"></tbody></table></div>
+      </div>
+
+      <!-- ROOM MAP -->
+      <div class="page" id="page-rooms">
+        <div class="filter-row" id="rm-filters">
+          <button class="filter-btn active" onclick="filterRooms('all',this)">All (168)</button>
+          <button class="filter-btn" onclick="filterRooms('occupied',this)">Occupied</button>
+          <button class="filter-btn" onclick="filterRooms('vacant',this)">Vacant</button>
+          <button class="filter-btn" onclick="filterRooms('overdue',this)">Overdue</button>
+          <button class="filter-btn" onclick="filterRooms('maintenance',this)">Maintenance</button>
+        </div>
+        <div id="room-map"></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#B5D4F4"></div>Occupied</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#C0DD97"></div>Vacant</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#F7C1C1"></div>Overdue</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#FAC775"></div>Maintenance</div>
+        </div>
+      </div>
+
+      <!-- TENANTS -->
+      <div class="page" id="page-tenants">
+        <div class="filter-row">
+          <button class="filter-btn active" onclick="setTView('card',this)">Card View</button>
+          <button class="filter-btn" onclick="setTView('list',this)">List View</button>
+          <input class="search-input" style="margin-left:auto" placeholder="Search name, room..." oninput="renderTenants(this.value)" id="tsearch">
+        </div>
+        <div id="tenant-card-view"></div>
+        <div id="tenant-list-view" style="display:none">
+          <div class="table-wrap"><table>
+            <thead><tr><th>Room</th><th>Wing</th><th>Photo</th><th>Tenant</th><th>Phone</th><th>Move-in</th><th>Rent</th><th>Status</th><th></th></tr></thead>
+            <tbody id="tenant-list-tbody"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- PAYMENTS -->
+      <div class="page" id="page-payments">
+        <div class="pay-summary">
+          <div class="stat-card"><div class="stat-label">Total Due</div><div class="stat-value cv-blue" id="p-total">—</div></div>
+          <div class="stat-card"><div class="stat-label">Collected</div><div class="stat-value cv-green" id="p-coll">—</div></div>
+          <div class="stat-card"><div class="stat-label">Outstanding</div><div class="stat-value cv-red" id="p-out">—</div></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Room</th><th>Tenant</th><th>Amount</th><th>Due Date</th><th>Paid Date</th><th>Status</th><th></th></tr></thead>
+          <tbody id="pay-tbody"></tbody>
+        </table></div>
+      </div>
+
+      <!-- INVOICES -->
+      <div class="page" id="page-invoices">
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <button class="btn btn-primary" onclick="alert('Monthly invoices generated for all tenants!')">Generate Monthly Invoices</button>
+          <button class="btn" onclick="openInvSettings()">Settings</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Invoice #</th><th>Room</th><th>Wing</th><th>Tenant</th><th>Amount</th><th>Issue Date</th><th>Due Date</th><th>Status</th></tr></thead>
+          <tbody id="inv-tbody"></tbody>
+        </table></div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="page" id="page-reports">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Occupancy Rate</div><div class="stat-value cv-blue" id="r-occ">—</div></div>
+          <div class="stat-card"><div class="stat-label">Avg Rent / Room</div><div class="stat-value cv-green" id="r-avg">—</div></div>
+          <div class="stat-card"><div class="stat-label">Collection Rate</div><div class="stat-value cv-green" id="r-cr">—</div></div>
+          <div class="stat-card"><div class="stat-label">Vacant Rooms</div><div class="stat-value cv-amber" id="r-vac">—</div></div>
+        </div>
+        <div class="section-title" style="margin-top:4px">Wing Summary</div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Wing</th><th>Rooms</th><th>Occupied</th><th>Vacant</th><th>Overdue</th><th>Maintenance</th><th>Revenue</th></tr></thead>
+          <tbody id="wing-tbody"></tbody>
+        </table></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div id="modal-root"></div>
+
+<script>
+const WINGS=[
+  {id:'A',count:14,color:'#185FA5'},{id:'B',count:31,color:'#3B6D11'},
+  {id:'C',count:22,color:'#854F0B'},{id:'D',count:12,color:'#533AB7'},
+  {id:'E',count:5, color:'#993556'},{id:'F',count:28,color:'#0F6E56'},
+  {id:'G',count:28,color:'#993C1D'},{id:'H',count:28,color:'#185FA5'},
+];
+const FN=['Sophea','Dara','Chanta','Bopha','Ratha','Sovan','Kanha','Pich','Vireak','Sreymom','Pisach','Vanna','Monita','Sarom','Kosal','Theary','Bunny','Channary','Lina','Sina','Makara','Vibol','Sokhom','Rany','Pisey','Chanthy','Kimhak','Socheata','Narith','Sreypov'];
+const LN=['Sok','Chhim','Pov','Kong','Ly','San','Heng','Rath','Yim','Nhem','Keo','Touch','Em','Lim','Kim','Meas','Ros','Chan','Noun','Horn','Oun','Phan','Tep','Seng','Nget','Peou','Chea','Bun','Doeun','Kuy'];
+const NATIONS=['Cambodian','Vietnamese','Chinese','Thai','Korean'];
+const JOBS=['Student','Business Owner','Government Staff','Private Employee','Freelancer','Teacher','Driver','Trader'];
+const AV_COLORS=['#185FA5','#3B6D11','#854F0B','#533AB7','#993556','#0F6E56','#993C1D','#A32D2D'];
+const ST_LIST=['occupied','occupied','occupied','occupied','occupied','occupied','occupied','vacant','vacant','overdue','maintenance'];
+function rn(){return FN[ri(30)]+' '+LN[ri(30)];}
+function ri(n){return Math.floor(Math.random()*n);}
+function fmt$(n){return '$'+Math.round(n).toLocaleString();}
+function fmtD(d){if(!d)return'—';return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function addD(d,n){let x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function pad2(n){return String(n).padStart(2,'0');}
+function inits(name){return name.split(' ').map(x=>x[0]).join('').slice(0,2);}
+
+const rooms=[];
+WINGS.forEach(w=>{
+  for(let i=1;i<=w.count;i++){
+    const id=w.id+'-'+pad2(i);
+    const st=ST_LIST[ri(ST_LIST.length)];
+    const rent=150+ri(14)*25;
+    const moveIn=new Date(2023,ri(12),ri(27)+1);
+    const has=st!=='vacant'&&st!=='maintenance';
+    rooms.push({
+      id,wing:w.id,num:i,status:st,rent,photo:null,
+      avatarColor:AV_COLORS[ri(8)],
+      tenant:has?{
+        name:rn(),gender:ri(2)===0?'Male':'Female',
+        dob:new Date(1985+ri(20),ri(12),ri(27)+1),
+        nationality:NATIONS[ri(5)],occupation:JOBS[ri(8)],
+        phone:'0'+(ri(9)+1)+''+ri(10)+''+ri(10)+''+ri(10)+''+ri(10)+''+ri(10)+''+ri(10)+''+ri(10),
+        phone2:ri(2)===0?'0'+(ri(9)+1)+''+ri(10)+''+ri(10)+''+ri(10)+''+ri(10)+''+ri(10)+''+ri(10)+''+ri(10):null,
+        email:'tenant.'+id.toLowerCase().replace('-','')+'@mail.com',
+        moveIn:fmtD(moveIn),moveInDate:moveIn,
+        idCard:'KH'+String(100000+ri(900000)),
+        idExpiry:new Date(2026+ri(5),ri(12),ri(27)+1),
+        deposit:rent*2,
+        emergencyName:rn(),
+        emergencyPhone:'0'+(ri(9)+1)+''+ri(10)+''+ri(10)+''+ri(10)+''+ri(10)+''+ri(10)+''+ri(10)+''+ri(10),
+        emergencyRelation:['Parent','Sibling','Spouse','Friend'][ri(4)],
+        notes:ri(3)===0?'Has a pet cat. Quiet tenant.':ri(2)===0?'Works night shift.':'',
+        docs:['ID Card Copy','Lease Agreement','Move-in Checklist'].slice(0,ri(3)+1)
+      }:null
+    });
+  }
+});
+
+const DUE=new Date(2026,2,1);
+const payments=rooms.filter(r=>r.tenant).map(r=>{
+  const isPaid=r.status==='occupied'&&ri(10)>1;
+  const st=r.status==='overdue'?'overdue':isPaid?'paid':'pending';
+  const history=[];
+  for(let m=1;m<=ri(6)+1;m++){const d=new Date(2025,m,1);history.push({month:d.toLocaleDateString('en-US',{month:'long',year:'numeric'}),amount:r.rent,status:'paid',paidDate:addD(d,ri(5))});}
+  return{room:r.id,wing:r.wing,tenant:r.tenant.name,amount:r.rent,dueDate:DUE,paidDate:isPaid?addD(DUE,ri(8)-3):null,status:st,history};
+});
+
+let invN=2000;
+const invoices=rooms.filter(r=>r.tenant).map(r=>({
+  num:'INV-'+(++invN),room:r.id,wing:r.wing,tenant:r.tenant.name,amount:r.rent,
+  issue:new Date(2026,2,1),due:addD(new Date(2026,2,1),14),
+  status:payments.find(p=>p.room===r.id)?.status||'pending'
+}));
+
+// ---- RENDERS ----
+function renderDash(){
+  const occ=rooms.filter(r=>r.status==='occupied').length;
+  const rev=payments.reduce((a,p)=>a+p.amount,0);
+  const coll=payments.filter(p=>p.status==='paid').reduce((a,p)=>a+p.amount,0);
+  const ovAmt=payments.filter(p=>p.status==='overdue').reduce((a,p)=>a+p.amount,0);
+  const ov=rooms.filter(r=>r.status==='overdue').length;
+  document.getElementById('d-occ').textContent=occ;
+  document.getElementById('d-occ-p').textContent=Math.round(occ/168*100)+'% occupancy';
+  document.getElementById('d-rev').textContent=fmt$(rev);
+  document.getElementById('d-coll').textContent=fmt$(coll)+' collected';
+  document.getElementById('d-ov').textContent=ov;
+  document.getElementById('d-ov-a').textContent=fmt$(ovAmt)+' outstanding';
+  document.getElementById('d-pay').innerHTML=payments.filter(p=>p.status==='paid').slice(0,6).map(p=>`<tr><td>${p.room}</td><td>${p.tenant}</td><td>${fmt$(p.amount)}</td><td>${fmtD(p.paidDate)}</td><td><span class="badge badge-paid">paid</span></td></tr>`).join('');
+  document.getElementById('d-ov-t').innerHTML=payments.filter(p=>p.status==='overdue').slice(0,6).map(p=>`<tr><td>${p.room}</td><td>${p.tenant}</td><td>${fmt$(p.amount)}</td><td>${fmtD(p.dueDate)}</td><td><button class="btn btn-primary btn-sm" onclick="markPaid('${p.room}');renderDash()">Mark Paid</button></td></tr>`).join('');
+}
+
+function renderRoomMap(filter='all'){
+  const wrap=document.getElementById('room-map');wrap.innerHTML='';
+  WINGS.forEach(w=>{
+    const wr=rooms.filter(r=>r.wing===w.id&&(filter==='all'||r.status===filter));
+    if(!wr.length)return;
+    const div=document.createElement('div');div.className='wing-block';
+    div.innerHTML=`<div class="wing-label"><span class="wing-tag" style="background:${w.color}">W${w.id}</span>Wing ${w.id} <span style="color:var(--text3);font-size:11px;font-weight:400;margin-left:4px">${wr.length} rooms</span></div><div class="room-row" id="wr-${w.id}"></div>`;
+    wrap.appendChild(div);
+    const row=div.querySelector('.room-row');
+    wr.forEach(rm=>{
+      const cell=document.createElement('div');
+      cell.className='room-cell r-'+rm.status;
+      cell.title=rm.id+(rm.tenant?' — '+rm.tenant.name:'');
+      cell.textContent=rm.id;
+      cell.onclick=()=>rm.tenant?openProfile(rm.id):alert('Room '+rm.id+' — '+rm.status+' (no tenant)');
+      row.appendChild(cell);
+    });
+  });
+}
+
+let tenantView='card';
+function setTView(v,btn){
+  tenantView=v;
+  document.querySelectorAll('#page-tenants .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tenant-card-view').style.display=v==='card'?'block':'none';
+  document.getElementById('tenant-list-view').style.display=v==='list'?'block':'none';
+  renderTenants(document.getElementById('tsearch').value);
+}
+
+function renderTenants(q=''){
+  const lq=q.toLowerCase();
+  const tr=rooms.filter(r=>r.tenant&&(!q||(r.id+r.tenant.name+r.wing).toLowerCase().includes(lq)));
+  if(tenantView==='card'){
+    document.getElementById('tenant-card-view').innerHTML=`<div class="tenant-grid">${tr.map(r=>{
+      const p=payments.find(x=>x.room===r.id);
+      const av=r.photo?`<img src="${r.photo}" alt="">`:`<span>${inits(r.tenant.name)}</span>`;
+      return `<div class="tenant-card" onclick="openProfile('${r.id}')">
+        <div class="tc-top">
+          <div class="avatar-lg" style="background:${r.avatarColor}22;color:${r.avatarColor}">${av}</div>
+          <div><div class="tc-name">${r.tenant.name}</div><div class="tc-room">Room ${r.id} · Wing ${r.wing}</div></div>
+        </div>
+        <div class="tc-row"><span>Phone</span><span>${r.tenant.phone}</span></div>
+        <div class="tc-row"><span>Rent</span><span>${fmt$(r.rent)}/mo</span></div>
+        <div class="tc-row"><span>Move-in</span><span>${r.tenant.moveIn}</span></div>
+        <div class="tc-row"><span>Payment</span><span><span class="badge badge-${p?.status||'pending'}">${p?.status||'pending'}</span></span></div>
+      </div>`;
+    }).join('')}</div>`;
+  } else {
+    document.getElementById('tenant-list-tbody').innerHTML=tr.map(r=>{
+      const p=payments.find(x=>x.room===r.id);
+      const av=r.photo?`<img src="${r.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">`:`<div class="avatar" style="background:${r.avatarColor}22;color:${r.avatarColor}">${inits(r.tenant.name)}</div>`;
+      return `<tr><td>${r.id}</td><td>${r.wing}</td><td>${av}</td><td>${r.tenant.name}</td><td>${r.tenant.phone}</td><td>${r.tenant.moveIn}</td><td>${fmt$(r.rent)}</td><td><span class="badge badge-${p?.status||'pending'}">${p?.status||'pending'}</span></td><td><button class="btn btn-sm" onclick="openProfile('${r.id}')">Profile</button></td></tr>`;
+    }).join('');
+  }
+}
+
+function renderPayments(){
+  let total=0,coll=0,out=0;
+  document.getElementById('pay-tbody').innerHTML=payments.map(p=>{
+    total+=p.amount;if(p.status==='paid')coll+=p.amount;else out+=p.amount;
+    return `<tr><td>${p.room}</td><td>${p.tenant}</td><td>${fmt$(p.amount)}</td><td>${fmtD(p.dueDate)}</td><td>${fmtD(p.paidDate)}</td><td><span class="badge badge-${p.status}">${p.status}</span></td><td>${p.status!=='paid'?`<button class="btn btn-primary btn-sm" onclick="markPaid('${p.room}');renderPayments()">Mark Paid</button>`:''}</td></tr>`;
+  }).join('');
+  document.getElementById('p-total').textContent=fmt$(total);
+  document.getElementById('p-coll').textContent=fmt$(coll);
+  document.getElementById('p-out').textContent=fmt$(out);
+}
+
+function renderInvoices(){
+  document.getElementById('inv-tbody').innerHTML=invoices.slice(0,50).map(inv=>`<tr><td>${inv.num}</td><td>${inv.room}</td><td>${inv.wing}</td><td>${inv.tenant}</td><td>${fmt$(inv.amount)}</td><td>${fmtD(inv.issue)}</td><td>${fmtD(inv.due)}</td><td><span class="badge badge-${inv.status}">${inv.status}</span></td></tr>`).join('');
+}
+
+function renderReports(){
+  const occ=rooms.filter(r=>r.status==='occupied').length;
+  const vac=rooms.filter(r=>r.status==='vacant').length;
+  const avg=payments.length?Math.round(payments.reduce((a,p)=>a+p.amount,0)/payments.length):0;
+  const paid=payments.filter(p=>p.status==='paid');
+  document.getElementById('r-occ').textContent=Math.round(occ/168*100)+'%';
+  document.getElementById('r-avg').textContent=fmt$(avg);
+  document.getElementById('r-cr').textContent=payments.length?Math.round(paid.length/payments.length*100)+'%':'—';
+  document.getElementById('r-vac').textContent=vac;
+  document.getElementById('wing-tbody').innerHTML=WINGS.map(w=>{
+    const wr=rooms.filter(r=>r.wing===w.id);
+    const wo=wr.filter(r=>r.status==='occupied').length;
+    const wv=wr.filter(r=>r.status==='vacant').length;
+    const wov=wr.filter(r=>r.status==='overdue').length;
+    const wm=wr.filter(r=>r.status==='maintenance').length;
+    const wrev=payments.filter(p=>p.wing===w.id).reduce((a,p)=>a+p.amount,0);
+    return `<tr><td><span class="wing-tag" style="background:${w.color};width:20px;height:20px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px">${w.id}</span></td><td>${wr.length}</td><td>${wo}</td><td>${wv}</td><td>${wov}</td><td>${wm}</td><td>${fmt$(wrev)}</td></tr>`;
+  }).join('');
+}
+
+// ---- PROFILE ----
+function openProfile(roomId){
+  const rm=rooms.find(r=>r.id===roomId);
+  if(!rm||!rm.tenant)return;
+  const t=rm.tenant;
+  const p=payments.find(x=>x.room===roomId);
+  const w=WINGS.find(w=>w.id===rm.wing);
+  const paidTotal=(p?.history||[]).reduce((a,x)=>a+x.amount,0);
+  const age=new Date().getFullYear()-t.dob.getFullYear();
+  const av=rm.photo?`<img src="${rm.photo}" alt="">`:`<span>${inits(t.name)}</span>`;
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3>Tenant Profile</h3>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-sm" onclick="openEditTenant('${roomId}')">Edit</button>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="profile-header">
+        <div class="profile-avatar" style="background:${rm.avatarColor}22;color:${rm.avatarColor}" onclick="triggerPhotoUpload('${roomId}')" title="Click to change photo">${av}</div>
+        <div style="flex:1">
+          <div class="profile-name">${t.name}</div>
+          <div class="profile-room">Room ${rm.id} · Wing ${rm.wing} · ${t.occupation}</div>
+          <div class="profile-badges">
+            <span class="badge badge-${rm.status}">${rm.status}</span>
+            <span class="badge badge-${p?.status||'pending'}">${p?.status||'pending'} payment</span>
+            <span class="badge" style="background:var(--bg3);color:var(--text2)">${t.nationality}</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:600;color:var(--green)">${fmt$(rm.rent)}</div>
+          <div style="font-size:11px;color:var(--text2)">per month</div>
+        </div>
+      </div>
+      <div class="profile-tabs">
+        <div class="profile-tab active" onclick="switchTab(this,'tab-info')">Personal Info</div>
+        <div class="profile-tab" onclick="switchTab(this,'tab-payment')">Payment History</div>
+        <div class="profile-tab" onclick="switchTab(this,'tab-docs')">Documents</div>
+        <div class="profile-tab" onclick="switchTab(this,'tab-notes')">Notes</div>
+      </div>
+      <div class="profile-section active" id="tab-info">
+        <div class="info-grid">
+          <div class="info-item"><div class="info-item-label">Full Name</div><div class="info-item-val">${t.name}</div></div>
+          <div class="info-item"><div class="info-item-label">Gender</div><div class="info-item-val">${t.gender}</div></div>
+          <div class="info-item"><div class="info-item-label">Date of Birth</div><div class="info-item-val">${fmtD(t.dob)} (age ${age})</div></div>
+          <div class="info-item"><div class="info-item-label">Nationality</div><div class="info-item-val">${t.nationality}</div></div>
+          <div class="info-item"><div class="info-item-label">Occupation</div><div class="info-item-val">${t.occupation}</div></div>
+          <div class="info-item"><div class="info-item-label">ID Card / Passport</div><div class="info-item-val">${t.idCard}</div></div>
+          <div class="info-item"><div class="info-item-label">ID Expiry</div><div class="info-item-val">${fmtD(t.idExpiry)}</div></div>
+          <div class="info-item"><div class="info-item-label">Phone 1</div><div class="info-item-val">${t.phone}</div></div>
+          <div class="info-item"><div class="info-item-label">Phone 2</div><div class="info-item-val">${t.phone2||'—'}</div></div>
+          <div class="info-item"><div class="info-item-label">Email</div><div class="info-item-val">${t.email}</div></div>
+          <div class="info-item"><div class="info-item-label">Move-in Date</div><div class="info-item-val">${t.moveIn}</div></div>
+          <div class="info-item"><div class="info-item-label">Security Deposit</div><div class="info-item-val">${fmt$(t.deposit)}</div></div>
+        </div>
+        <div class="sub-section-title">Emergency Contact</div>
+        <div class="info-grid">
+          <div class="info-item"><div class="info-item-label">Name</div><div class="info-item-val">${t.emergencyName}</div></div>
+          <div class="info-item"><div class="info-item-label">Relation</div><div class="info-item-val">${t.emergencyRelation}</div></div>
+          <div class="info-item"><div class="info-item-label">Phone</div><div class="info-item-val">${t.emergencyPhone}</div></div>
+        </div>
+      </div>
+      <div class="profile-section" id="tab-payment">
+        <div class="pay-summary-mini">
+          <div class="mini-stat"><div class="mini-stat-val cv-green">${(p?.history||[]).length}</div><div class="mini-stat-lbl">Months Paid</div></div>
+          <div class="mini-stat"><div class="mini-stat-val cv-green">${fmt$(paidTotal)}</div><div class="mini-stat-lbl">Total Paid</div></div>
+          <div class="mini-stat"><div class="mini-stat-val cv-blue">${fmt$(rm.rent)}</div><div class="mini-stat-lbl">Current Rent</div></div>
+        </div>
+        <div class="sub-section-title" style="margin-top:0">This Month</div>
+        <div class="pay-history-row">
+          <div><div style="font-weight:500">${DUE.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div><div style="font-size:11px;color:var(--text2)">Due: ${fmtD(DUE)}</div></div>
+          <div style="text-align:right"><div style="font-weight:500">${fmt$(rm.rent)}</div><span class="badge badge-${p?.status||'pending'}">${p?.status||'pending'}</span></div>
+        </div>
+        <div class="sub-section-title">Past Payments</div>
+        ${(p?.history||[]).map(h=>`<div class="pay-history-row"><div><div style="font-weight:500">${h.month}</div><div style="font-size:11px;color:var(--text2)">Paid: ${fmtD(h.paidDate)}</div></div><div style="text-align:right"><div style="font-weight:500">${fmt$(h.amount)}</div><span class="badge badge-paid">paid</span></div></div>`).join('')}
+        ${p?.status!=='paid'?`<div style="margin-top:12px"><button class="btn btn-primary" style="width:100%" onclick="markPaid('${roomId}');closeModal()">Mark This Month as Paid</button></div>`:''}
+      </div>
+      <div class="profile-section" id="tab-docs">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Documents for ${t.name}</div>
+        ${t.docs.map(d=>`<div class="doc-item"><div style="display:flex;align-items:center;gap:8px"><span>📄</span><span>${d}</span></div><div style="display:flex;gap:6px"><button class="btn btn-sm">View</button><button class="btn btn-sm btn-danger">Delete</button></div></div>`).join('')}
+        ${t.docs.length===0?`<div style="text-align:center;padding:20px;color:var(--text2);font-size:12px">No documents uploaded yet.</div>`:''}
+        <div class="upload-area" style="margin-top:10px" onclick="alert('Connect to your file storage to enable uploads.')">
+          <div style="font-size:24px">⬆</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:4px">Click to upload document</div>
+        </div>
+      </div>
+      <div class="profile-section" id="tab-notes">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Private notes — not visible to tenant</div>
+        <textarea class="form-input" rows="5" style="resize:vertical" placeholder="Add notes...">${t.notes||''}</textarea>
+        <button class="btn btn-primary" style="margin-top:8px" onclick="alert('Note saved!')">Save Note</button>
+        ${t.notes?`<div class="note-box">${t.notes}</div>`:''}
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Close</button>
+      <button class="btn btn-primary" onclick="openEditTenant('${roomId}')">Edit Profile</button>
+    </div>
+  </div></div>`;
+}
+
+function switchTab(el,id){
+  el.closest('.modal').querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active'));
+  el.closest('.modal').querySelectorAll('.profile-section').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+function triggerPhotoUpload(roomId){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.onchange=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const rm=rooms.find(r=>r.id===roomId);if(rm)rm.photo=ev.target.result;
+      closeModal();openProfile(roomId);
+      renderTenants(document.getElementById('tsearch').value);
+    };reader.readAsDataURL(f);
+  };inp.click();
+}
+
+function openEditTenant(roomId){
+  const rm=rooms.find(r=>r.id===roomId);if(!rm||!rm.tenant)return;
+  const t=rm.tenant;
+  const wingOpts=WINGS.map(w=>`<option value="${w.id}"${w.id===rm.wing?' selected':''}>Wing ${w.id}</option>`).join('');
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal modal-wide">
+    <div class="modal-header"><h3>Edit Tenant — ${rm.id}</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="sub-section-title" style="margin-top:0">Personal Information</div>
+      <div class="form-grid2">
+        <div class="form-row"><label class="form-label">Full Name</label><input class="form-input" value="${t.name}"></div>
+        <div class="form-row"><label class="form-label">Gender</label><select class="form-select"><option${t.gender==='Male'?' selected':''}>Male</option><option${t.gender==='Female'?' selected':''}>Female</option></select></div>
+        <div class="form-row"><label class="form-label">Date of Birth</label><input class="form-input" type="date" value="${t.dob.toISOString().slice(0,10)}"></div>
+        <div class="form-row"><label class="form-label">Nationality</label><input class="form-input" value="${t.nationality}"></div>
+        <div class="form-row"><label class="form-label">Occupation</label><input class="form-input" value="${t.occupation}"></div>
+        <div class="form-row"><label class="form-label">ID Card / Passport</label><input class="form-input" value="${t.idCard}"></div>
+        <div class="form-row"><label class="form-label">ID Expiry Date</label><input class="form-input" type="date" value="${t.idExpiry.toISOString().slice(0,10)}"></div>
+      </div>
+      <div class="sub-section-title">Contact</div>
+      <div class="form-grid2">
+        <div class="form-row"><label class="form-label">Phone 1</label><input class="form-input" value="${t.phone}"></div>
+        <div class="form-row"><label class="form-label">Phone 2</label><input class="form-input" value="${t.phone2||''}"></div>
+        <div class="form-row"><label class="form-label">Email</label><input class="form-input" value="${t.email}"></div>
+      </div>
+      <div class="sub-section-title">Room & Rental</div>
+      <div class="form-grid3">
+        <div class="form-row"><label class="form-label">Wing</label><select class="form-select">${wingOpts}</select></div>
+        <div class="form-row"><label class="form-label">Room No.</label><input class="form-input" value="${pad2(rm.num)}"></div>
+        <div class="form-row"><label class="form-label">Monthly Rent ($)</label><input class="form-input" type="number" value="${rm.rent}"></div>
+        <div class="form-row"><label class="form-label">Move-in Date</label><input class="form-input" type="date" value="${t.moveInDate.toISOString().slice(0,10)}"></div>
+        <div class="form-row"><label class="form-label">Security Deposit ($)</label><input class="form-input" type="number" value="${t.deposit}"></div>
+      </div>
+      <div class="sub-section-title">Emergency Contact</div>
+      <div class="form-grid3">
+        <div class="form-row"><label class="form-label">Name</label><input class="form-input" value="${t.emergencyName}"></div>
+        <div class="form-row"><label class="form-label">Relation</label><input class="form-input" value="${t.emergencyRelation}"></div>
+        <div class="form-row"><label class="form-label">Phone</label><input class="form-input" value="${t.emergencyPhone}"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="openProfile('${roomId}')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal();alert('Profile updated!')">Save Changes</button>
+    </div>
+  </div></div>`;
+}
+
+function openAddTenant(){
+  const wingOpts=WINGS.map(w=>`<option value="${w.id}">Wing ${w.id}</option>`).join('');
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal modal-wide">
+    <div class="modal-header"><h3>Add New Tenant</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="sub-section-title" style="margin-top:0">Personal Information</div>
+      <div class="form-grid2">
+        <div class="form-row"><label class="form-label">Full Name</label><input class="form-input" placeholder="Sophea Sok"></div>
+        <div class="form-row"><label class="form-label">Gender</label><select class="form-select"><option>Male</option><option>Female</option></select></div>
+        <div class="form-row"><label class="form-label">Date of Birth</label><input class="form-input" type="date"></div>
+        <div class="form-row"><label class="form-label">Nationality</label><input class="form-input" placeholder="Cambodian"></div>
+        <div class="form-row"><label class="form-label">Occupation</label><input class="form-input" placeholder="Student"></div>
+        <div class="form-row"><label class="form-label">ID Card / Passport</label><input class="form-input" placeholder="KH123456"></div>
+        <div class="form-row"><label class="form-label">ID Expiry Date</label><input class="form-input" type="date"></div>
+        <div class="form-row"><label class="form-label">Phone 1</label><input class="form-input" placeholder="0xx xxx xxx"></div>
+        <div class="form-row"><label class="form-label">Phone 2 (optional)</label><input class="form-input" placeholder="0xx xxx xxx"></div>
+        <div class="form-row"><label class="form-label">Email</label><input class="form-input" placeholder="email@example.com"></div>
+      </div>
+      <div class="sub-section-title">Room & Rental</div>
+      <div class="form-grid3">
+        <div class="form-row"><label class="form-label">Wing</label><select class="form-select">${wingOpts}</select></div>
+        <div class="form-row"><label class="form-label">Room No.</label><input class="form-input" type="number" placeholder="01"></div>
+        <div class="form-row"><label class="form-label">Monthly Rent ($)</label><input class="form-input" type="number" placeholder="250"></div>
+        <div class="form-row"><label class="form-label">Move-in Date</label><input class="form-input" type="date"></div>
+        <div class="form-row"><label class="form-label">Security Deposit ($)</label><input class="form-input" type="number" placeholder="500"></div>
+      </div>
+      <div class="sub-section-title">Emergency Contact</div>
+      <div class="form-grid3">
+        <div class="form-row"><label class="form-label">Name</label><input class="form-input" placeholder="Contact name"></div>
+        <div class="form-row"><label class="form-label">Relation</label><input class="form-input" placeholder="Parent / Sibling..."></div>
+        <div class="form-row"><label class="form-label">Phone</label><input class="form-input" placeholder="0xx xxx xxx"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal();alert('Tenant added!')">Add Tenant</button>
+    </div>
+  </div></div>`;
+}
+
+function openInvSettings(){
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal"><div class="modal-header"><h3>Invoice Settings</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+  <div class="modal-body">
+    <div class="form-row"><label class="form-label">Due day each month</label><input class="form-input" value="1" type="number"></div>
+    <div class="form-row"><label class="form-label">Grace period (days)</label><input class="form-input" value="5" type="number"></div>
+    <div class="form-row"><label class="form-label">Late fee ($)</label><input class="form-input" value="10" type="number"></div>
+    <div class="form-row"><label class="form-label">Building name</label><input class="form-input" value="Wings A–H Building"></div>
+    <div class="form-row"><label class="form-label">Manager name</label><input class="form-input" placeholder="Your name"></div>
+    <div class="form-row"><label class="form-label">Contact phone</label><input class="form-input" placeholder="0xx xxx xxx"></div>
+  </div>
+  <div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal()">Save Settings</button></div>
+  </div></div>`;
+}
+
+function markPaid(roomId){
+  const p=payments.find(x=>x.room===roomId);
+  if(p&&p.status!=='paid'){p.status='paid';p.paidDate=new Date();}
+  const rm=rooms.find(r=>r.id===roomId);
+  if(rm&&rm.status==='overdue')rm.status='occupied';
+  const inv=invoices.find(i=>i.room===roomId);
+  if(inv)inv.status='paid';
+}
+
+function showPage(p,el){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  if(el)el.classList.add('active');
+  const titles={dashboard:'Dashboard',rooms:'Room Map',tenants:'Tenants',payments:'Payments',invoices:'Invoices',reports:'Reports'};
+  document.getElementById('page-title').textContent=titles[p]||p;
+  if(p==='rooms')renderRoomMap();
+  if(p==='tenants')renderTenants();
+  if(p==='payments')renderPayments();
+  if(p==='invoices')renderInvoices();
+  if(p==='reports')renderReports();
+  if(p==='dashboard')renderDash();
+}
+
+function filterRooms(f,btn){
+  document.querySelectorAll('#rm-filters .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderRoomMap(f);
+}
+
+function globalSearch(v){
+  const cur=document.querySelector('.nav-item.active');
+  if(cur&&cur.textContent.includes('Tenant')){
+    document.getElementById('tsearch').value=v;renderTenants(v);
+  }
+}
+
+function closeModal(){document.getElementById('modal-root').innerHTML='';}
+
+renderDash();
+</script>
+</body>
+</html>
